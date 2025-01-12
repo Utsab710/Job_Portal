@@ -6,7 +6,7 @@ import FormField from "./FormField";
 import SeekerAddress from "./SeekerAddress";
 import { FormData } from "../../../types";
 
-function Seeker() {
+function Register() {
   const [isEmployer, setIsEmployer] = useState(false); // Toggle between Seeker and Employer
 
   const {
@@ -35,68 +35,55 @@ function Seeker() {
       return;
     }
 
-    if (isEmployer) {
-      try {
-        const response = await fetch("http://127.0.0.1:8000/api/users/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: data.username,
-            email: data.email,
-            password: data.password,
-          }),
-        });
+    // Prepare common payload
+    const payload = {
+      username: data.username,
+      email: data.email,
+      password: data.password,
+      first_name: data.firstname,
+      last_name: data.lastname,
+      isEmployer: isEmployer,
+      phone_no: isEmployer ? null : data.phone_no || null,
+      address: isEmployer ? null : data.address || null,
+      company_name: isEmployer ? data.company_name || null : null,
+      skills: isEmployer ? null : data.skills || null,
+      pan_no: isEmployer ? data.pan_no || null : null,
+      qualification: isEmployer ? null : data.qualification || null,
+    };
 
-        if (response.ok) {
-          const result = await response.json();
-          alert("Employer registered successfully: " + result.message);
-          reset();
-        } else {
-          const errorData = await response.json();
-          if (errorData.username) {
-            setError("username", {
-              type: "manual",
-              message: errorData.username[0],
-            });
-          }
-          if (errorData.email) {
-            setError("email", { type: "manual", message: errorData.email[0] });
-          }
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/users/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(
+          `${isEmployer ? "Employer" : "Seeker"} registered successfully: ${
+            result.message || "Welcome!"
+          }`
+        );
+        reset();
+      } else {
+        const errorData = await response.json();
+        if (errorData.username) {
+          setError("username", {
+            type: "manual",
+            message: errorData.username[0],
+          });
         }
-      } catch (error) {
-        console.error("Network error:", error);
-        alert("Network error. Please try again.");
+        if (errorData.email) {
+          setError("email", { type: "manual", message: errorData.email[0] });
+        }
+        // Add other error handlers if needed
       }
-    } else {
-      const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
-
-      const usernameExists = existingUsers.some(
-        (user) => user.username === data.username
-      );
-
-      if (usernameExists) {
-        setError("username", {
-          type: "manual",
-          message: "Username already exists",
-        });
-        return;
-      }
-
-      const userExists = existingUsers.some(
-        (user) => user.email === data.email
-      );
-
-      if (userExists) {
-        setError("email", { type: "manual", message: "Email already exists" });
-        return;
-      }
-
-      existingUsers.push(data);
-      localStorage.setItem("users", JSON.stringify(existingUsers));
-      alert("Seeker registered successfully");
-      reset();
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Network error. Please try again.");
     }
   };
 
@@ -125,6 +112,29 @@ function Seeker() {
 
           <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-4">
+              {/*First and lastname */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Firstname*
+                </label>
+                <FormField
+                  type="text"
+                  name="firstname"
+                  register={register}
+                  error={errors.firstname}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Lastname*
+                </label>
+                <FormField
+                  type="text"
+                  name="lastname"
+                  register={register}
+                  error={errors.lastname}
+                />
+              </div>
               {/* Username Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -220,4 +230,4 @@ function Seeker() {
   );
 }
 
-export default Seeker;
+export default Register;

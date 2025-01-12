@@ -11,6 +11,8 @@ import EmployerHome from "./components/Home/EmployerHome";
 import Profile from "./components/Seeker/Profile";
 import Eprofile from "./components/Employer/Eprofile";
 import Postjob from "./components/Employer/Postjob";
+import Register from "./components/Register/Register";
+import Login from "./components/Login/Login";
 
 function App() {
   return (
@@ -19,8 +21,10 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/seeker" element={<Seeker />} />
         <Route path="/employer" element={<Employer />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/employerlogin" element={<EmployerLogin />} />
         <Route path="/seekerlogin" element={<SeekerLogin />} />
         <Route path="/employerhome" element={<EmployerHome />} />

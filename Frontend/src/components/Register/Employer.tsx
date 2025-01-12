@@ -15,32 +15,8 @@ function Employer() {
     getValues,
   } = useForm<FormData>();
 
+  // Submit handler
   const onSubmit = async (data: FormData) => {
-    const existingUsers = JSON.parse(localStorage.getItem("employers") || "[]");
-
-    // Check if the username already exists
-    const usernameExists = existingUsers.some(
-      (user: FormData) => user.username === data.username
-    );
-
-    if (usernameExists) {
-      setError("username", {
-        type: "manual",
-        message: "Username already exists",
-      });
-      return;
-    }
-
-    // Check if the email already exists
-    const userExists = existingUsers.some(
-      (user: FormData) => user.email === data.email
-    );
-
-    if (userExists) {
-      setError("email", { type: "manual", message: "Email already exists" });
-      return;
-    }
-
     // Check if passwords match
     if (data.password !== data.confirmPassword) {
       setError("confirmPassword", {
@@ -50,14 +26,39 @@ function Employer() {
       return;
     }
 
-    // Add new user to existing users
-    existingUsers.push(data);
-    localStorage.setItem("employers", JSON.stringify(existingUsers));
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/users/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: data.username,
+          email: data.email,
+          password: data.password,
+        }),
+      });
 
-    console.log("SUCCESS", data);
-
-    // Reset the form fields
-    reset();
+      if (response.ok) {
+        const result = await response.json();
+        alert("Employer registered successfully: " + result.message);
+        reset(); // Reset form fields
+      } else {
+        const errorData = await response.json();
+        if (errorData.username) {
+          setError("username", {
+            type: "manual",
+            message: errorData.username[0],
+          });
+        }
+        if (errorData.email) {
+          setError("email", { type: "manual", message: errorData.email[0] });
+        }
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Network error. Please try again.");
+    }
   };
 
   return (
