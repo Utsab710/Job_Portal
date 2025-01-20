@@ -14,7 +14,7 @@ function Login() {
     setError("");
 
     try {
-      // Authenticate user and retrieve tokens
+      // Step 1: Get token
       const tokenResponse = await fetch("http://localhost:8000/api/token/", {
         method: "POST",
         headers: {
@@ -26,35 +26,56 @@ function Login() {
         }),
       });
 
+      const tokenResponseText = await tokenResponse.text();
+      console.log("Token Response:", tokenResponseText);
+
       if (!tokenResponse.ok) {
-        throw new Error("Invalid email or password");
+        const errorData = JSON.parse(tokenResponseText);
+        throw new Error(
+          errorData.email?.[0] ||
+            errorData.detail ||
+            "Invalid credentials. Please try again."
+        );
       }
 
-      const tokenData = await tokenResponse.json();
+      const tokenData = JSON.parse(tokenResponseText);
       const accessToken = tokenData.access;
+
+      // Save tokens
       localStorage.setItem("access_token", accessToken);
       localStorage.setItem("refresh_token", tokenData.refresh);
 
-      // Fetch user details using the access token
-      const userResponse = await fetch("http://localhost:8000/api/users/me/", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      // Step 2: Get user details using the access token
+      const userResponse = await fetch(
+        "http://localhost:8000/api/user-details/",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      const userResponseText = await userResponse.text();
+      console.log("User Response:", userResponseText);
 
       if (!userResponse.ok) {
-        throw new Error("Failed to fetch user details");
+        throw new Error("Failed to get user information");
       }
 
-      const user = await userResponse.json();
+      const user = JSON.parse(userResponseText);
+      console.log("User data:", user);
+
+      // Save user info
+      localStorage.setItem("username", user.username || user.email);
+      localStorage.setItem("role", user.role); // Store the role
 
       // Redirect based on user role
-      if (user.isEmployer) {
-        navigate("/employerhome"); // Replace with your actual Employer Home path
+      if (user.role === "job_employer") {
+        navigate("/employerhome");
       } else {
-        navigate("/"); // Replace with your actual Seeker Home path
+        navigate("/seekerhome");
       }
     } catch (err) {
       console.error("Login error:", err.message);
@@ -124,13 +145,9 @@ function Login() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account? Register as{" "}
+              Don't have an account?{" "}
               <a href="/register" className="text-red-600 hover:text-red-500">
-                Seeker
-              </a>{" "}
-              or{" "}
-              <a href="/register" className="text-red-600 hover:text-red-500">
-                Employer
+                Register here
               </a>
             </p>
           </div>

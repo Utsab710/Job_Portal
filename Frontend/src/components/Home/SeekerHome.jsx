@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
 
-const EmployerHome = () => {
+const SeekerHome = () => {
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
 
@@ -12,23 +12,21 @@ const EmployerHome = () => {
     const storedUsername = localStorage.getItem("username");
     const userRole = localStorage.getItem("role");
 
+    // If no token, redirect to login
     if (!token) {
       navigate("/login");
-      return;
+      return; // Ensure no further code executes
     }
 
-    if (userRole !== "job_employer") {
-      navigate("/seekerhome");
-      return;
+    // If role is not 'job_seeker', redirect to employer home
+    if (userRole !== "job_seeker") {
+      navigate("/employerhome");
+      return; // Ensure no further code executes
     }
 
-    if (storedUsername) {
-      setUsername(storedUsername); // Set the username retrieved from localStorage
-    } else {
-      console.log("No username found in localStorage");
-      setUsername("Guest");
-    }
-  }, [navigate]);
+    // If everything is fine, set username
+    setUsername(storedUsername || "");
+  }, [navigate]); // Dependency array ensures this only runs on mount
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -39,8 +37,8 @@ const EmployerHome = () => {
             Welcome, <span className="text-red-600">{username}</span>!
           </h1>
           <p className="text-gray-600 text-lg">
-            Welcome to your employer dashboard. Here you can post new jobs,
-            manage applications, and view candidate profiles.
+            Welcome to your job seeker dashboard. Here you can search for jobs,
+            manage your applications, and update your profile.
           </p>
         </div>
       </main>
@@ -49,4 +47,4 @@ const EmployerHome = () => {
   );
 };
 
-export default EmployerHome;
+export default SeekerHome;
