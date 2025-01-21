@@ -4,21 +4,12 @@ import Footer from "../Footer/Footer";
 import { Link } from "react-router-dom";
 
 function Home() {
-  const [data, setData] = useState([]);
+  const [jobs, setJobs] = useState([]);
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const response = await fetch("http://127.0.0.1:8000/api/jobs/");
-        if (response.ok) {
-          const jobData = await response.json();
-          setData(jobData);
-        }
-      } catch (error) {
-        console.error("Error fetching jobs:", error.message);
-      }
-    };
-    fetchJobs();
+    // Get jobs from localStorage
+    const storedJobs = JSON.parse(localStorage.getItem("jobPostings") || "[]");
+    setJobs(storedJobs);
   }, []);
 
   return (
@@ -52,21 +43,38 @@ function Home() {
           </div>
         </section>
 
-        <h2 className="text-3xl font-bold mb-8 text-center">Featured Jobs</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto p-4">
-          {data.map((job, index) => (
-            <div
-              key={index}
-              className="bg-white p-6 rounded-lg shadow-md flex flex-col"
-            >
-              <h3 className="text-xl font-semibold mb-2">{job.title}</h3>
-              <p className="text-gray-600 mb-4">{job.company}</p>
-              <p className="text-sm text-gray-500 mb-4">{job.location}</p>
-              <button className="text-red-600 hover:underline">
-                Learn More
-              </button>
-            </div>
-          ))}
+        <div className="py-12">
+          <h2 className="text-3xl font-bold mb-8 text-center">Featured Jobs</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto p-4">
+            {jobs.map((job) => (
+              <div
+                key={job.id}
+                className="bg-white p-6 rounded-lg shadow-md flex flex-col justify-between"
+              >
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">{job.title}</h3>
+                  <p className="text-gray-600 mb-2">{job.company}</p>
+                  <p className="text-sm text-gray-500 mb-2">{job.location}</p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {job.jobType} • {job.experienceLevel}
+                  </p>
+                  {(job.salaryMin || job.salaryMax) && (
+                    <p className="text-sm text-gray-600 mb-4">
+                      Salary: ${job.salaryMin} - ${job.salaryMax}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                    {job.description}
+                  </p>
+                </div>
+
+                <button className="text-red-600 hover:text-red-700 font-medium hover:underline mt-4">
+                  Learn More
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       <Footer />

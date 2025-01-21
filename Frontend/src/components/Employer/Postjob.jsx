@@ -1,9 +1,13 @@
 import React, { useState } from "react";
 import { AlertCircle } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 import Header from "../Header/Header";
 
 const Postjob = () => {
+  const navigate = useNavigate();
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
     companyName: "",
     companyAddress: "",
@@ -16,9 +20,6 @@ const Postjob = () => {
     requirements: "",
     benefits: "",
   });
-
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,44 +42,46 @@ const Postjob = () => {
       return;
     }
 
-    // Get existing jobs from localStorage
-    const existingJobs = JSON.parse(
-      localStorage.getItem("jobPostings") || "[]"
-    );
+    try {
+      // Get existing jobs from localStorage
+      const existingJobs = JSON.parse(
+        localStorage.getItem("jobPostings") || "[]"
+      );
 
-    // Add new job with timestamp
-    const newJob = {
-      ...formData,
-      id: Date.now(),
-      datePosted: new Date().toISOString(),
-      status: "active",
-    };
+      // Add new job with timestamp and ID
+      const newJob = {
+        id: Date.now(), // Unique ID
+        title: formData.jobTitle,
+        company: formData.companyName,
+        location: formData.companyAddress,
+        jobType: formData.jobType,
+        experienceLevel: formData.experienceLevel,
+        salaryMin: formData.salaryMin,
+        salaryMax: formData.salaryMax,
+        description: formData.jobDescription,
+        requirements: formData.requirements,
+        benefits: formData.benefits,
+        datePosted: new Date().toISOString(),
+        status: "active",
+      };
 
-    // Save to localStorage
-    localStorage.setItem(
-      "jobPostings",
-      JSON.stringify([...existingJobs, newJob])
-    );
+      // Save to localStorage
+      localStorage.setItem(
+        "jobPostings",
+        JSON.stringify([...existingJobs, newJob])
+      );
 
-    setIsSubmitted(true);
-    setError("");
+      setIsSubmitted(true);
+      setError("");
 
-    // Reset form after 3 seconds
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({
-        companyName: "",
-        companyAddress: "",
-        jobTitle: "",
-        jobType: "full-time",
-        experienceLevel: "entry",
-        salaryMin: "",
-        salaryMax: "",
-        jobDescription: "",
-        requirements: "",
-        benefits: "",
-      });
-    }, 3000);
+      // Reset form and redirect after 2 seconds
+      setTimeout(() => {
+        setIsSubmitted(false);
+        navigate("/"); // Redirect to home page
+      }, 2000);
+    } catch (error) {
+      setError("Failed to save job posting. Please try again.");
+    }
   };
 
   return (
@@ -90,18 +93,16 @@ const Postjob = () => {
         </h1>
 
         {isSubmitted && (
-          <Alert className="mb-6 bg-green-50 text-green-700 border-green-200">
-            <AlertDescription>
-              Job posted successfully! Redirecting to job listings...
-            </AlertDescription>
-          </Alert>
+          <div className="mb-6 bg-green-50 text-green-700 p-4 rounded-md border border-green-200">
+            Job posted successfully! Redirecting to home page...
+          </div>
         )}
 
         {error && (
-          <Alert className="mb-6 bg-red-50 text-red-700 border-red-200">
+          <div className="mb-6 bg-red-50 text-red-700 p-4 rounded-md border border-red-200 flex items-center gap-2">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+            <span>{error}</span>
+          </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">

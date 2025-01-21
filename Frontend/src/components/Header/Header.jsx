@@ -3,37 +3,63 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 
 export default function Header() {
   const [loggedInUser, setLoggedInUser] = useState(null);
-  const [userType, setUserType] = useState(null); // 'seeker' or 'employer'
+  const [userType, setUserType] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const seeker = JSON.parse(localStorage.getItem("job_seeker"));
-    const employer = JSON.parse(localStorage.getItem("job_employer"));
+    const checkAuth = async () => {
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        await fetchUserDetails(token);
+      }
+    };
 
-    if (seeker) {
-      setLoggedInUser(seeker);
-      setUserType("seeker");
-    } else if (employer) {
-      setLoggedInUser(employer);
-      setUserType("employer");
-    }
+    checkAuth();
   }, []);
 
-  const handleLogout = () => {
-    if (userType === "seeker") {
-      localStorage.removeItem("currentSeeker");
-    } else {
-      localStorage.removeItem("currentEmployer");
+  const fetchUserDetails = async (token) => {
+    try {
+      const response = await fetch("http://localhost:8000/api/user-details/", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user details");
+      }
+
+      const userData = await response.json();
+      console.log("Fetched user data:", userData);
+      setLoggedInUser(userData);
+      setUserType(userData.role === "job_employer" ? "employer" : "seeker");
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      localStorage.removeItem("access_token");
+      setLoggedInUser(null);
+      setUserType(null);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
     setLoggedInUser(null);
     setUserType(null);
     navigate("/");
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   return (
     <header className="shadow sticky z-50 top-0">
       <nav className="bg-white border-gray-200 px-4 lg:px-6 py-2.5">
         <div className="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl">
+          {/* Logo */}
           <Link to="/" className="flex items-center">
             <div className="flex items-center">
               <span className="text-red-500 font-bold text-2xl mr-2">JP</span>
@@ -41,135 +67,139 @@ export default function Header() {
             </div>
           </Link>
 
-          <div className="hidden justify-between items-center w-full lg:flex lg:w-auto lg:order-1">
-            <ul className="flex font-medium lg:flex-row lg:space-x-8">
-              {(!loggedInUser || userType === "seeker") && (
-                <li>
+          {/* Mobile menu button */}
+          <button
+            onClick={toggleMenu}
+            className="lg:hidden p-2 text-gray-500 hover:text-gray-700"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              {isMenuOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
+
+          {/* Navigation links */}
+          <div
+            className={`${
+              isMenuOpen ? "block" : "hidden"
+            } w-full lg:block lg:w-auto lg:order-1`}
+          >
+            {loggedInUser && (
+              <ul className="flex flex-col lg:flex-row font-medium lg:space-x-8 mt-4 lg:mt-0">
+                {/* Common links */}
+                <li className="mb-2 lg:mb-0">
                   <NavLink
                     to="/"
                     className={({ isActive }) =>
-                      `${
+                      `block py-2 pr-4 pl-3 ${
                         isActive ? "text-orange-700" : "text-gray-700"
-                      } hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 hover:text-orange-700 lg:p-0`
+                      } hover:text-orange-700 lg:p-0`
                     }
                   >
                     Home
                   </NavLink>
                 </li>
-              )}
-              <li>
-                <NavLink
-                  to="/about"
-                  className={({ isActive }) =>
-                    `block py-2 pr-4 pl-3 duration-200 ${
-                      isActive ? "text-orange-700" : "text-gray-700"
-                    } border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 hover:text-orange-700 lg:p-0`
-                  }
-                >
-                  About
-                </NavLink>
-              </li>
-              {!loggedInUser && (
-                <li>
-                  <NavLink
-                    to="/contact"
-                    className={({ isActive }) =>
-                      `block py-2 pr-4 pl-3 duration-200 ${
-                        isActive ? "text-orange-700" : "text-gray-700"
-                      } border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 hover:text-orange-700 lg:p-0`
-                    }
-                  >
-                    Contact Us
-                  </NavLink>
-                </li>
-              )}
-              {loggedInUser && userType === "seeker" && (
-                <>
-                  <li>
-                    <NavLink
-                      to="/profile"
-                      className={({ isActive }) =>
-                        `block py-2 pr-4 pl-3 duration-200 ${
-                          isActive ? "text-orange-700" : "text-gray-700"
-                        } border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 hover:text-orange-700 lg:p-0`
-                      }
-                    >
-                      Profile
-                    </NavLink>
-                  </li>
-                  <li>
-                    <NavLink
-                      to="/applied-jobs"
-                      className={({ isActive }) =>
-                        `block py-2 pr-4 pl-3 duration-200 ${
-                          isActive ? "text-orange-700" : "text-gray-700"
-                        } border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 hover:text-orange-700 lg:p-0`
-                      }
-                    >
-                      Applied Jobs
-                    </NavLink>
-                  </li>
-                </>
-              )}
-              {loggedInUser && userType === "employer" && (
-                <>
-                  <li>
-                    <NavLink
-                      to="/eprofile"
-                      className={({ isActive }) =>
-                        `block py-2 pr-4 pl-3 duration-200 ${
-                          isActive ? "text-orange-700" : "text-gray-700"
-                        } border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 hover:text-orange-700 lg:p-0`
-                      }
-                    >
-                      Profile
-                    </NavLink>
-                  </li>
-                  <li>
-                    <NavLink
-                      to="/manage-jobs"
-                      className={({ isActive }) =>
-                        `block py-2 pr-4 pl-3 duration-200 ${
-                          isActive ? "text-orange-700" : "text-gray-700"
-                        } border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 hover:text-orange-700 lg:p-0`
-                      }
-                    >
-                      Manage Jobs
-                    </NavLink>
-                  </li>
-                  <li>
-                    <NavLink
-                      to="/postjob"
-                      className={({ isActive }) =>
-                        `block py-2 pr-4 pl-3 duration-200 ${
-                          isActive ? "text-orange-700" : "text-gray-700"
-                        } border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 hover:text-orange-700 lg:p-0`
-                      }
-                    >
-                      Post Jobs
-                    </NavLink>
-                  </li>
-                  <li>
-                    <NavLink
-                      to="/selection"
-                      className={({ isActive }) =>
-                        `block py-2 pr-4 pl-3 duration-200 ${
-                          isActive ? "text-orange-700" : "text-gray-700"
-                        } border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 hover:text-orange-700 lg:p-0`
-                      }
-                    >
-                      Selection
-                    </NavLink>
-                  </li>
-                </>
-              )}
-            </ul>
+
+                {/* Employer-specific links */}
+                {userType === "employer" && (
+                  <>
+                    <li className="mb-2 lg:mb-0">
+                      <NavLink
+                        to="/eprofile"
+                        className={({ isActive }) =>
+                          `block py-2 pr-4 pl-3 ${
+                            isActive ? "text-orange-700" : "text-gray-700"
+                          } hover:text-orange-700 lg:p-0`
+                        }
+                      >
+                        Profile
+                      </NavLink>
+                    </li>
+                    <li className="mb-2 lg:mb-0">
+                      <NavLink
+                        to="/manage-jobs"
+                        className={({ isActive }) =>
+                          `block py-2 pr-4 pl-3 ${
+                            isActive ? "text-orange-700" : "text-gray-700"
+                          } hover:text-orange-700 lg:p-0`
+                        }
+                      >
+                        Manage Jobs
+                      </NavLink>
+                    </li>
+                    <li className="mb-2 lg:mb-0">
+                      <NavLink
+                        to="/postjob"
+                        className={({ isActive }) =>
+                          `block py-2 pr-4 pl-3 ${
+                            isActive ? "text-orange-700" : "text-gray-700"
+                          } hover:text-orange-700 lg:p-0`
+                        }
+                      >
+                        Post Jobs
+                      </NavLink>
+                    </li>
+                  </>
+                )}
+
+                {/* Seeker-specific links */}
+                {userType === "seeker" && (
+                  <>
+                    <li className="mb-2 lg:mb-0">
+                      <NavLink
+                        to="/profile"
+                        className={({ isActive }) =>
+                          `block py-2 pr-4 pl-3 ${
+                            isActive ? "text-orange-700" : "text-gray-700"
+                          } hover:text-orange-700 lg:p-0`
+                        }
+                      >
+                        Profile
+                      </NavLink>
+                    </li>
+                    <li className="mb-2 lg:mb-0">
+                      <NavLink
+                        to="/applied-jobs"
+                        className={({ isActive }) =>
+                          `block py-2 pr-4 pl-3 ${
+                            isActive ? "text-orange-700" : "text-gray-700"
+                          } hover:text-orange-700 lg:p-0`
+                        }
+                      >
+                        Applied Jobs
+                      </NavLink>
+                    </li>
+                  </>
+                )}
+              </ul>
+            )}
           </div>
 
-          <div className="flex items-center order-2">
+          {/* Login/Logout section */}
+          <div className="flex items-center lg:order-2">
             {loggedInUser ? (
               <div className="flex items-center space-x-4">
-                <span className="text-gray-800">{loggedInUser.username}</span>
+                <span className="text-gray-800">
+                  {loggedInUser.username} ({userType})
+                </span>
                 <button
                   onClick={handleLogout}
                   className="text-white bg-red-500 hover:bg-red-600 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5"
