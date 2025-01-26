@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
 
@@ -7,91 +6,135 @@ function Profile() {
   const [activeSection, setActiveSection] = useState("personal");
   const [seekerData, setSeekerData] = useState(null);
   const [completionPercentage, setCompletionPercentage] = useState(0);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Get seeker data from localStorage
-    const currentSeeker = JSON.parse(localStorage.getItem("currentSeeker"));
-    setSeekerData(currentSeeker);
+    const fetchSeekerProfile = async () => {
+      try {
+        const accessToken = localStorage.getItem("access_token");
+        console.log("Access Token:", accessToken); // Log the token
 
-    // Calculate profile completion
-    if (currentSeeker) {
-      let completed = 0;
-      const totalFields = 6; // Total number of main fields we're checking
+        if (!accessToken) {
+          // Redirect to login if no token is found
+          window.location.href = "/login"; // Update this to your login route
+          return;
+        }
 
-      if (currentSeeker.username) completed++;
-      if (currentSeeker.email) completed++;
-      if (currentSeeker.address) completed++;
-      if (currentSeeker.yearsOfExperience) completed++;
+        const response = await fetch("http://localhost:8000/api/profile/", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-      setCompletionPercentage(Math.round((completed / totalFields) * 100));
-    }
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Error response:", errorText);
+          throw new Error(`Failed to fetch profile data: ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log("Profile data:", data);
+        setSeekerData(data);
+      } catch (err) {
+        console.error("Detailed error fetching profile:", err);
+        setError(err.message);
+      }
+    };
+
+    fetchSeekerProfile();
   }, []);
 
-  const renderPersonalDetails = () => (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Personal Details</h2>
-        {/* <button className="text-red-500 hover:text-red-600">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-          </svg>
-        </button> */}
-      </div>
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Username
-            </label>
-            <p className="mt-1 text-gray-900">
-              {seekerData?.username || "Not Available"}
-            </p>
+  const renderPersonalDetails = () => {
+    if (error) {
+      return (
+        <div className="bg-white p-6 rounded-lg shadow text-red-500">
+          Error: {error}
+        </div>
+      );
+    }
+
+    if (!seekerData) {
+      return (
+        <div className="bg-white p-6 rounded-lg shadow">
+          Loading profile data...
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold">Personal Details</h2>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <p className="mt-1 text-gray-900">
-              {seekerData?.email || "Not Available"}
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Address
-            </label>
-            <p className="mt-1 text-gray-900">
-              {seekerData?.address || "Not Available"}
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Experience
-            </label>
-            <p className="mt-1 text-gray-900">
-              {seekerData?.yearsOfExperience || 0} years
-            </p>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Firstname
+                </label>
+                <p className="mt-1 text-gray-900">
+                  {seekerData.first_name || "Not Available"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Lastname
+                </label>
+                <p className="mt-1 text-gray-900">
+                  {seekerData.last_name || "Not Available"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Qualification
+                </label>
+                <p className="mt-1 text-gray-900">
+                  {seekerData.qualification || "Not Available"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Username
+                </label>
+                <p className="mt-1 text-gray-900">
+                  {seekerData.username || "Not Available"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
+                <p className="mt-1 text-gray-900">
+                  {seekerData.email || "Not Available"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Address
+                </label>
+                <p className="mt-1 text-gray-900">
+                  {seekerData.address || "Not Available"}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  );
+        <div>
+          <button>Update Profile</button>
+        </div>
+      </>
+    );
+  };
 
   const renderSection = () => {
     switch (activeSection) {
       case "personal":
         return renderPersonalDetails();
       case "resume":
-        return (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Resume</h2>
-            <p className="text-gray-600">Resume section coming soon...</p>
-          </div>
-        );
+        return <ResumeSection />; // Use the ResumeSection component here
       case "jobPreference":
         return (
           <div className="bg-white p-6 rounded-lg shadow">
@@ -182,4 +225,63 @@ function Profile() {
     </div>
   );
 }
+
+function ResumeSection() {
+  const [resume, setResume] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    const formData = new FormData();
+    formData.append("resume", file);
+
+    try {
+      const accessToken = localStorage.getItem("access_token");
+      const response = await fetch("http://localhost:8000/api/upload-resume/", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to upload resume: ${errorText}`);
+      }
+
+      const data = await response.json();
+      setResume(data.resume);
+      setError(null);
+      alert("Resume uploaded successfully");
+    } catch (error) {
+      console.error("Upload failed", error);
+      setError(error.message);
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow">
+      <h2 className="text-xl font-semibold mb-4">Resume</h2>
+      <input
+        type="file"
+        accept=".pdf,.doc,.docx"
+        onChange={handleFileUpload}
+        className="mb-4"
+      />
+      {error && <div className="text-red-500">{error}</div>}
+      {resume && (
+        <a
+          href={resume}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 underline"
+        >
+          View Uploaded Resume
+        </a>
+      )}
+    </div>
+  );
+}
+
 export default Profile;

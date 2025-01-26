@@ -5,17 +5,38 @@ import { Link } from "react-router-dom";
 
 function Home() {
   const [jobs, setJobs] = useState([]);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
-    // Get jobs from localStorage
-    const storedJobs = JSON.parse(localStorage.getItem("jobPostings") || "[]");
-    setJobs(storedJobs);
-  }, []);
+    const fetchJobs = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/jobposting/");
+        if (!response.ok) {
+          throw new Error("Failed to fetch job postings");
+        }
+        const data = await response.json();
+        setJobs(data);
+      } catch (error) {
+        console.error("Error fetching jobs:", error);
+      }
+    };
 
+    const checkUserRole = () => {
+      const role = localStorage.getItem("role");
+      if (role) {
+        setUserRole(role);
+      }
+    };
+
+    fetchJobs();
+    checkUserRole();
+  }, []);
+  console.log("Current User Role:", userRole);
   return (
     <div>
       <Header />
       <div className="bg-gray-100 min-h-screen">
+        {/* Hero Section */}
         <section className="bg-gray-900 text-white py-20">
           <div className="container mx-auto text-center px-4">
             <h1 className="text-4xl font-bold mb-4">
@@ -43,37 +64,49 @@ function Home() {
           </div>
         </section>
 
+        {/* Featured Jobs Section */}
         <div className="py-12">
           <h2 className="text-3xl font-bold mb-8 text-center">Featured Jobs</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto p-4">
-            {jobs.map((job) => (
-              <div
-                key={job.id}
-                className="bg-white p-6 rounded-lg shadow-md flex flex-col justify-between"
-              >
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">{job.title}</h3>
-                  <p className="text-gray-600 mb-2">{job.company}</p>
-                  <p className="text-sm text-gray-500 mb-2">{job.location}</p>
+            {jobs.length > 0 ? (
+              jobs.map((job) => (
+                <div key={job.id} className="bg-white p-6 rounded-lg shadow-md">
+                  <h3 className="text-xl font-semibold mb-2">
+                    {job.job_title}
+                  </h3>
+                  <p className="text-gray-600 mb-2">{job.company_name}</p>
+                  <p className="text-sm text-gray-500 mb-2">
+                    {job.company_address}
+                  </p>
                   <p className="text-sm text-gray-600 mb-2">
-                    {job.jobType} • {job.experienceLevel}
+                    {job.job_type} • {job.experience_level}
                   </p>
-                  {(job.salaryMin || job.salaryMax) && (
-                    <p className="text-sm text-gray-600 mb-4">
-                      Salary: ${job.salaryMin} - ${job.salaryMax}
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                    {job.description}
+                  <p className="text-sm text-gray-600 mb-4">
+                    {job.job_description}
                   </p>
-                </div>
 
-                <button className="text-red-600 hover:text-red-700 font-medium hover:underline mt-4">
-                  Learn More
-                </button>
-              </div>
-            ))}
+                  <div className="flex gap-4 items-center">
+                    <Link
+                      to={`/job/${job.id}`}
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      View Full Details
+                    </Link>
+
+                    {userRole === "job_seeker" && (
+                      <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                        Apply
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-center col-span-3 text-gray-500">
+                No job listings available.
+              </p>
+            )}
           </div>
         </div>
       </div>

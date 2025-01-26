@@ -19,7 +19,7 @@ function SeekerAddress({ register, setValue, error }: SeekerAddressProps) {
 
     setIsLoading(true);
     try {
-      const API_KEY = "AlzaSyjpjs9F21zCmRtGQQ3RCVs3LZHtO9VzEdf";
+      const API_KEY = "AlzaSyYpFC3JnmdgpiSx1gSgNclAodMlhlb-aVu";
       const response = await fetch(
         `https://maps.gomaps.pro/maps/api/place/autocomplete/json?input=${encodeURIComponent(
           input

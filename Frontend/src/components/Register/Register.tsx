@@ -228,7 +228,13 @@ function Register() {
                       name="phone_no"
                       register={register}
                       error={errors.phone_no}
-                      validation={{ required: "Phone number is required" }}
+                      validation={{
+                        required: "Phone number is required",
+                        pattern: {
+                          value: /^[0-9]{10}$/,
+                          message: "Phone number must be exactly 10 digits",
+                        },
+                      }}
                     />
                   </div>
                   <div>
@@ -246,12 +252,27 @@ function Register() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Qualification
                     </label>
-                    <FormField
-                      type="text"
-                      name="qualification"
-                      register={register}
-                      error={errors.qualification}
-                    />
+                    <select
+                      {...register("qualification", {
+                        required: "Qualification is required",
+                      })}
+                      className={`mt-1 p-2 w-full border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 ${
+                        errors.qualification ? "border-red-500" : ""
+                      }`}
+                    >
+                      <option value="">Select Qualification</option>
+                      <option value="SEE">SEE</option>
+                      <option value="+2">+2</option>
+                      <option value="Under_graduate">Under Graduate</option>
+                      <option value="Graduate">Graduate</option>
+                      <option value="Masters">Masters</option>
+                      <option value="PhD">PhD</option>
+                    </select>
+                    {errors.qualification && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.qualification.message}
+                      </p>
+                    )}
                   </div>
                 </>
               )}

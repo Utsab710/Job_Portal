@@ -14,6 +14,7 @@ import Postjob from "./components/Employer/Postjob";
 import Register from "./components/Register/Register";
 import Login from "./components/Login/Login";
 import SeekerHome from "./components/Home/SeekerHome";
+import Recommended from "./components/Recommendation/Recommended";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/eprofile" element={<Eprofile />} />
         <Route path="/postjob" element={<Postjob />} />
+        <Route path="/recommended" element={<Recommended />} />
       </Routes>
     </>
   );
