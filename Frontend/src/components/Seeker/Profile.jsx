@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
 
@@ -7,17 +7,23 @@ function Profile() {
   const [seekerData, setSeekerData] = useState(null);
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [error, setError] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    qualification: "",
+    username: "",
+    email: "",
+    address: "",
+    skills: "",
+  });
 
   useEffect(() => {
     const fetchSeekerProfile = async () => {
       try {
         const accessToken = localStorage.getItem("access_token");
-        console.log("Access Token:", accessToken); // Log the token
-
         if (!accessToken) {
-          // Redirect to login if no token is found
-          window.location.href = "/login"; // Update this to your login route
-          return;
+          throw new Error("No access token found");
         }
 
         const response = await fetch("http://localhost:8000/api/profile/", {
@@ -30,13 +36,27 @@ function Profile() {
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error("Error response:", errorText);
           throw new Error(`Failed to fetch profile data: ${errorText}`);
         }
 
         const data = await response.json();
-        console.log("Profile data:", data);
         setSeekerData(data);
+        setFormData({
+          first_name: data.first_name || "",
+          last_name: data.last_name || "",
+          qualification: data.qualification || "",
+          username: data.username || "",
+          email: data.email || "",
+          address: data.address || "",
+          skills: data.skills || "",
+        });
+
+        const filledFields = Object.values(data).filter(
+          (value) => value !== null && value !== ""
+        ).length;
+        const totalFields = Object.keys(data).length;
+        const percentage = (filledFields / totalFields) * 100;
+        setCompletionPercentage(percentage.toFixed(2));
       } catch (err) {
         console.error("Detailed error fetching profile:", err);
         setError(err.message);
@@ -45,6 +65,45 @@ function Profile() {
 
     fetchSeekerProfile();
   }, []);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleUpdateProfile = async () => {
+    try {
+      const accessToken = localStorage.getItem("access_token");
+      if (!accessToken) {
+        throw new Error("No access token found");
+      }
+
+      const response = await fetch("http://localhost:8000/api/profile/", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update profile: ${errorText}`);
+      }
+
+      const updatedData = await response.json();
+      setSeekerData(updatedData);
+      setIsEditing(false);
+      alert("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
+    }
+  };
 
   const renderPersonalDetails = () => {
     if (error) {
@@ -64,68 +123,193 @@ function Profile() {
     }
 
     return (
-      <>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Personal Details</h2>
+      <div className="bg-white p-6 rounded-lg shadow">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold">Personal Details</h2>
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+          >
+            {isEditing ? "Cancel" : "Update Profile"}
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            {isEditing ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Firstname
+                  </label>
+                  <input
+                    type="text"
+                    name="first_name"
+                    value={formData.first_name}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Lastname
+                  </label>
+                  <input
+                    type="text"
+                    name="last_name"
+                    value={formData.last_name}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Qualification
+                  </label>
+                  <input
+                    type="text"
+                    name="qualification"
+                    value={formData.qualification}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Address
+                  </label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Skills
+                  </label>
+                  <input
+                    type="text"
+                    name="skills"
+                    value={formData.skills}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Firstname
+                  </label>
+                  <p className="mt-1 text-gray-900">
+                    {seekerData.first_name || "Not Available"}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Lastname
+                  </label>
+                  <p className="mt-1 text-gray-900">
+                    {seekerData.last_name || "Not Available"}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Qualification
+                  </label>
+                  <p className="mt-1 text-gray-900">
+                    {seekerData.qualification || "Not Available"}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Username
+                  </label>
+                  <p className="mt-1 text-gray-900">
+                    {seekerData.username || "Not Available"}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Email
+                  </label>
+                  <p className="mt-1 text-gray-900">
+                    {seekerData.email || "Not Available"}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Address
+                  </label>
+                  <p className="mt-1 text-gray-900">
+                    {seekerData.address || "Not Available"}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Skills
+                  </label>
+                  <p className="mt-1 text-gray-900">
+                    {seekerData.skills || "Not Available"}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Firstname
-                </label>
-                <p className="mt-1 text-gray-900">
-                  {seekerData.first_name || "Not Available"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Lastname
-                </label>
-                <p className="mt-1 text-gray-900">
-                  {seekerData.last_name || "Not Available"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Qualification
-                </label>
-                <p className="mt-1 text-gray-900">
-                  {seekerData.qualification || "Not Available"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Username
-                </label>
-                <p className="mt-1 text-gray-900">
-                  {seekerData.username || "Not Available"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Email
-                </label>
-                <p className="mt-1 text-gray-900">
-                  {seekerData.email || "Not Available"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Address
-                </label>
-                <p className="mt-1 text-gray-900">
-                  {seekerData.address || "Not Available"}
-                </p>
-              </div>
+
+          {isEditing && (
+            <div className="mt-4">
+              <button
+                onClick={handleUpdateProfile}
+                className="bg-green-500 text-white px-4 py-2 rounded-lg"
+              >
+                Save Changes
+              </button>
             </div>
-          </div>
+          )}
         </div>
-        <div>
-          <button>Update Profile</button>
-        </div>
-      </>
+      </div>
+    );
+  };
+
+  const renderResumeSection = () => {
+    return <ResumeSection />;
+  };
+
+  const renderJobPreferenceSection = () => {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-6">Job Preference</h2>
+        <p>Job preference section content goes here.</p>
+      </div>
     );
   };
 
@@ -134,18 +318,11 @@ function Profile() {
       case "personal":
         return renderPersonalDetails();
       case "resume":
-        return <ResumeSection />; // Use the ResumeSection component here
+        return renderResumeSection();
       case "jobPreference":
-        return (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Job Preferences</h2>
-            <p className="text-gray-600">
-              Job preferences section coming soon...
-            </p>
-          </div>
-        );
+        return renderJobPreferenceSection();
       default:
-        return renderPersonalDetails();
+        return null;
     }
   };
 
@@ -154,7 +331,6 @@ function Profile() {
       <Header />
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="grid grid-cols-12 gap-6">
-          {/* Left Sidebar */}
           <div className="col-span-3">
             <div className="bg-white p-4 rounded-lg shadow">
               <nav className="space-y-1">
@@ -191,7 +367,6 @@ function Profile() {
               </nav>
             </div>
 
-            {/* Profile Completion Card */}
             <div className="mt-6 bg-white p-4 rounded-lg shadow">
               <h3 className="text-lg font-medium mb-2">Profile Completeness</h3>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
@@ -217,7 +392,6 @@ function Profile() {
             </div>
           </div>
 
-          {/* Main Content */}
           <div className="col-span-9">{renderSection()}</div>
         </div>
       </div>
