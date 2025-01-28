@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Header from "../Header/Header";
@@ -7,10 +7,7 @@ const Postjob = () => {
   const navigate = useNavigate();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState("");
-
   const [formData, setFormData] = useState({
-    companyName: "",
-    companyAddress: "",
     jobTitle: "",
     jobType: "full-time",
     experienceLevel: "entry",
@@ -19,7 +16,37 @@ const Postjob = () => {
     jobDescription: "",
     requirements: "",
     benefits: "",
+    companyAddress: "", // Added companyAddress field
   });
+
+  useEffect(() => {
+    // Fetch company address from backend
+    const fetchUserAddress = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/profile/", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setFormData((prevState) => ({
+            ...prevState,
+            companyAddress: data.address || "", // Assuming address is part of the user profile
+          }));
+        } else {
+          setError("Failed to fetch company address.");
+        }
+      } catch (error) {
+        console.error("Error fetching address:", error);
+        setError("Failed to fetch company address.");
+      }
+    };
+
+    fetchUserAddress();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,24 +60,45 @@ const Postjob = () => {
     e.preventDefault();
 
     // Basic validation
-    if (
-      !formData.companyName ||
-      !formData.jobTitle ||
-      !formData.jobDescription
-    ) {
+    if (!formData.jobTitle || !formData.jobDescription) {
       setError("Please fill in all required fields");
       return;
     }
 
+    // Salary validation
+    if (formData.salaryMin && formData.salaryMax) {
+      if (
+        parseFloat(formData.salaryMin) < 0 ||
+        parseFloat(formData.salaryMax) < 0
+      ) {
+        setError("Salaries cannot be negative.");
+        return;
+      }
+      if (parseFloat(formData.salaryMax) <= parseFloat(formData.salaryMin)) {
+        setError("Max salary must be greater than min salary.");
+        return;
+      }
+    }
+
+    // Create jobData object first
     const jobData = {
-      company_name: formData.companyName,
-      company_address: formData.companyAddress,
-      job_title: formData.jobTitle,
-      job_type: "full_time", // Corrected to match Django model
-      experience_level: 1, // Corrected to match Django model (1 for Entry Level)
-      job_description: formData.jobDescription,
-      requirements: formData.requirements,
+      job_title: formData.jobTitle.trim(),
+      job_type: formData.jobType === "full-time" ? "full_time" : "part_time",
+      experience_level:
+        formData.experienceLevel === "entry"
+          ? 1
+          : formData.experienceLevel === "mid"
+          ? 2
+          : 3,
+      job_description: formData.jobDescription.trim(),
+      requirements: formData.requirements.trim() || null,
+      min_salary: formData.salaryMin ? parseInt(formData.salaryMin) : null,
+      max_salary: formData.salaryMax ? parseInt(formData.salaryMax) : null,
+      company_address: formData.companyAddress.trim() || null,
     };
+
+    // Log the data being sent
+    console.log("Submitting job data:", jobData);
 
     try {
       const response = await fetch("http://127.0.0.1:8000/api/jobposting/", {
@@ -62,21 +110,31 @@ const Postjob = () => {
         body: JSON.stringify(jobData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Backend error response:", errorData);
-        setError(errorData.detail || "Failed to post job. Please try again.");
+        console.error("Error response:", data);
+        if (typeof data === "object" && data.detail) {
+          setError(data.detail);
+        } else if (typeof data === "object") {
+          // Handle validation errors
+          const errors = Object.entries(data)
+            .map(([key, value]) => `${key}: ${value.join(", ")}`)
+            .join("; ");
+          setError(errors);
+        } else {
+          setError("An unexpected error occurred");
+        }
       } else {
-        const data = await response.json();
         console.log("Job posted successfully:", data);
         setIsSubmitted(true);
+        setTimeout(() => navigate("/"), 2000);
       }
     } catch (error) {
-      console.error("Error connecting to server:", error);
-      setError("Failed to connect to the server.");
+      console.error("Error details:", error);
+      setError(`Failed to submit job posting: ${error.message}`);
     }
   };
-
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Header />
@@ -99,42 +157,6 @@ const Postjob = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Company Details Section */}
-          <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Company Details
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Company Name*
-                </label>
-                <input
-                  type="text"
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Company Address
-                </label>
-                <input
-                  type="text"
-                  name="companyAddress"
-                  value={formData.companyAddress}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500"
-                />
-              </div>
-            </div>
-          </div>
-
           {/* Job Details Section */}
           <div className="bg-gray-50 p-4 rounded-lg space-y-4">
             <h2 className="text-lg font-semibold text-gray-900">Job Details</h2>
@@ -159,22 +181,13 @@ const Postjob = () => {
                   Job Type
                 </label>
                 <select
-                  name="job_type"
+                  name="jobType"
                   value={formData.jobType}
                   onChange={handleChange}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500"
                 >
-                  <option value="full_time">Full Time</option>
-                  <option value="part_time">Part Time</option>
-                </select>
-
-                <select
-                  name="experience_level"
-                  value={formData.experienceLevel}
-                  onChange={handleChange}
-                >
-                  <option value={1}>Entry Level</option>
-                  <option value={2}>Mid Level</option>
-                  <option value={3}>Senior Level</option>
+                  <option value="full-time">Full Time</option>
+                  <option value="part-time">Part Time</option>
                 </select>
               </div>
 
@@ -274,8 +287,6 @@ const Postjob = () => {
               type="button"
               onClick={() =>
                 setFormData({
-                  companyName: "",
-                  companyAddress: "",
                   jobTitle: "",
                   jobType: "full-time",
                   experienceLevel: "entry",
@@ -284,6 +295,7 @@ const Postjob = () => {
                   jobDescription: "",
                   requirements: "",
                   benefits: "",
+                  companyAddress: "",
                 })
               }
               className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"

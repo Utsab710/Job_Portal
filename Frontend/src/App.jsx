@@ -15,6 +15,9 @@ import Register from "./components/Register/Register";
 import Login from "./components/Login/Login";
 import SeekerHome from "./components/Home/SeekerHome";
 import Recommended from "./components/Recommendation/Recommended";
+import JobDetails from "./components/Seeker/JobDetails";
+import AppliedJobs from "./components/Seeker/AppliedJobs";
+import ApplyingJobs from "./components/Seeker/ApplyingJobs";
 
 function App() {
   return (
@@ -35,6 +38,9 @@ function App() {
         <Route path="/eprofile" element={<Eprofile />} />
         <Route path="/postjob" element={<Postjob />} />
         <Route path="/recommended" element={<Recommended />} />
+        <Route path="/jobdetails/:id" element={<JobDetails />} />
+        <Route path="/appliedjobs" element={<AppliedJobs />} />
+        <Route path="/applyingjobs" element={<ApplyingJobs />} />
       </Routes>
     </>
   );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import Header from "../Header/Header";
+import { Link } from "react-router-dom";
 
 const experienceLevelMap = {
   1: "entry",
@@ -264,6 +265,17 @@ const Recommended = () => {
                     </div>
                   </div>
                 </div>
+                <div className="flex gap-4 items-center">
+                  <Link
+                    to={`/jobdetails/${job.id}`}
+                    className="text-blue-600 hover:underline font-medium"
+                  >
+                    View Full Details
+                  </Link>
+                </div>
+                <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                  <Link to={"/applyingjobs"}>Apply</Link>
+                </button>
               </div>
             ))}
           </div>

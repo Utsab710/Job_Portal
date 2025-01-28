@@ -6,18 +6,32 @@ import { Link } from "react-router-dom";
 function Home() {
   const [jobs, setJobs] = useState([]);
   const [userRole, setUserRole] = useState(null);
+  const [error, setError] = useState(null); // Add this line to define error state
 
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/jobposting/");
+        const token = localStorage.getItem("access_token");
+        const response = await fetch("http://127.0.0.1:8000/api/jobposting/", {
+          method: "GET", // Explicitly specify GET method
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
         if (!response.ok) {
-          throw new Error("Failed to fetch job postings");
+          const errorData = await response.json();
+          console.error("Server error:", errorData);
+          throw new Error(errorData.detail || "Failed to fetch job postings");
         }
+
         const data = await response.json();
+        console.log("Fetched jobs:", data); // Debug log
         setJobs(data);
       } catch (error) {
         console.error("Error fetching jobs:", error);
+        setError(error.message); // Set the error message here
       }
     };
 
@@ -31,7 +45,9 @@ function Home() {
     fetchJobs();
     checkUserRole();
   }, []);
+
   console.log("Current User Role:", userRole);
+
   return (
     <div>
       <Header />
@@ -68,6 +84,10 @@ function Home() {
         <div className="py-12">
           <h2 className="text-3xl font-bold mb-8 text-center">Featured Jobs</h2>
 
+          {error && (
+            <div className="text-red-600 text-center mb-4">{error}</div> // Display error if it exists
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto p-4">
             {jobs.length > 0 ? (
               jobs.map((job) => (
@@ -88,7 +108,7 @@ function Home() {
 
                   <div className="flex gap-4 items-center">
                     <Link
-                      to={`/job/${job.id}`}
+                      to={`/jobdetails/${job.id}`}
                       className="text-blue-600 hover:underline font-medium"
                     >
                       View Full Details
@@ -96,7 +116,7 @@ function Home() {
 
                     {userRole === "job_seeker" && (
                       <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-                        Apply
+                        <Link to={"/applyingjobs"}>Apply</Link>
                       </button>
                     )}
                   </div>
