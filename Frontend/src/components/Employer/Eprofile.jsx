@@ -6,23 +6,48 @@ const EProfile = () => {
   const [activeSection, setActiveSection] = useState("company");
   const [employerData, setEmployerData] = useState(null);
   const [completionPercentage, setCompletionPercentage] = useState(0);
-
+  const [formData, setFormData] = useState({
+    company_name: "",
+    email: "",
+  });
   useEffect(() => {
-    // Get employer data from localStorage
-    const currentEmployer = JSON.parse(localStorage.getItem("currentEmployer"));
-    setEmployerData(currentEmployer);
+    const fetchEmployerProfile = async () => {
+      try {
+        const accessToken = localStorage.getItem("access_token");
+        if (!accessToken) {
+          throw new Error("No access token found");
+        }
+        const response = await fetch(
+          "http://localhost:8000/api/employer-profile/",
+          {
+            // Updated endpoint
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            `Failed to fetch employer profile data: ${errorText}`
+          );
+        }
+        const data = await response.json();
+        console.log("Fetched employer data:", data); // Log data to inspect
+        setEmployerData(data);
+        setFormData({
+          company_name: data.company_name || "",
+          email: data.email || "",
+        });
+      } catch (err) {
+        console.error("Detailed error fetching employer profile:", err);
+        setError(err.message);
+      }
+    };
 
-    // Calculate profile completion
-    if (currentEmployer) {
-      let completed = 0;
-      const totalFields = 8; // Total number of main fields we're checking
-
-      if (currentEmployer.username) completed++;
-      if (currentEmployer.email) completed++;
-      if (currentEmployer.companyName) completed++;
-
-      setCompletionPercentage(Math.round((completed / totalFields) * 100));
-    }
+    fetchEmployerProfile();
   }, []);
 
   const renderCompanyDetails = () => (
@@ -37,9 +62,7 @@ const EProfile = () => {
               Company Name
             </label>
             <p className="mt-1 text-gray-900">
-              {employerData?.companyName ||
-                employerData?.username ||
-                "Not Available"}
+              {employerData?.company_name || "Not Available"}
             </p>
           </div>
           <div>

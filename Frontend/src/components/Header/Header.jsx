@@ -157,6 +157,18 @@ export default function Header() {
                         Post Jobs
                       </NavLink>
                     </li>
+                    <li className="mb-2 lg:mb-0">
+                      <NavLink
+                        to="/erecommend"
+                        className={({ isActive }) =>
+                          `block py-2 pr-4 pl-3 ${
+                            isActive ? "text-orange-700" : "text-gray-700"
+                          } hover:text-orange-700 lg:p-0`
+                        }
+                      >
+                        Recommended
+                      </NavLink>
+                    </li>
                   </>
                 )}
 
