@@ -165,6 +165,11 @@ function Register() {
                   validation={{ required: "Username is required" }}
                 />
               </div>
+              <SeekerAddress
+                register={register}
+                setValue={setValue}
+                error={errors.address}
+              />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email*

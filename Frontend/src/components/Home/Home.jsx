@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function Home() {
   const [jobs, setJobs] = useState([]);
   const [userRole, setUserRole] = useState(null);
   const [error, setError] = useState(null); // Add this line to define error state
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -47,6 +49,10 @@ function Home() {
   }, []);
 
   console.log("Current User Role:", userRole);
+
+  const handleApplyClick = (job) => {
+    navigate(`/apply/${job.id}`, { state: { job } });
+  };
 
   return (
     <div>
@@ -115,8 +121,11 @@ function Home() {
                     </Link>
 
                     {userRole === "job_seeker" && (
-                      <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-                        <Link to={"/applyingjobs"}>Apply</Link>
+                      <button
+                        onClick={() => handleApplyClick(job)}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                      >
+                        Apply
                       </button>
                     )}
                   </div>

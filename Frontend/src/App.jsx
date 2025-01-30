@@ -19,6 +19,7 @@ import JobDetails from "./components/Seeker/JobDetails";
 import AppliedJobs from "./components/Seeker/AppliedJobs";
 import ApplyingJobs from "./components/Seeker/ApplyingJobs";
 import Erecommend from "./components/Employer/Erecommend";
+import ViewCandidate from "./components/Employer/ViewCandidate";
 
 function App() {
   return (
@@ -40,9 +41,11 @@ function App() {
         <Route path="/postjob" element={<Postjob />} />
         <Route path="/recommended" element={<Recommended />} />
         <Route path="/erecommend" element={<Erecommend />} />
+        <Route path="/viewcandidate" element={<ViewCandidate />} />
         <Route path="/jobdetails/:id" element={<JobDetails />} />
         <Route path="/appliedjobs" element={<AppliedJobs />} />
-        <Route path="/applyingjobs" element={<ApplyingJobs />} />
+
+        <Route path="/apply/:jobId" element={<ApplyingJobs />} />
       </Routes>
     </>
   );

@@ -1,11 +1,14 @@
-import React from 'react'
+import React from "react";
+import Header from "../Header/Header";
+import Footer from "../Footer/Footer";
 
 function Erecommend() {
   return (
     <div>
-      
+      <Header />
+      <Footer />
     </div>
-  )
+  );
 }
 
-export default Erecommend
+export default Erecommend;
