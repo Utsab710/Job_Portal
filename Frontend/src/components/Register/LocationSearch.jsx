@@ -36,13 +36,16 @@ const LocationSearch = ({ onLocationSelect, onClose }) => {
 
       if (data.length > 0) {
         const { lat, lon, display_name } = data[0];
+        const parsedLat = parseFloat(lat);
+        const parsedLng = parseFloat(lon);
+
         const latLng = {
-          lat: parseFloat(lat),
-          lng: parseFloat(lon),
+          latitude: parsedLat,
+          longitude: parsedLng,
           address: display_name,
-          coordinates: `Latitude: ${parseFloat(lat).toFixed(
+          displayCoordinates: `Latitude: ${parsedLat.toFixed(
             6
-          )}, Longitude: ${parseFloat(lon).toFixed(6)}`,
+          )}, Longitude: ${parsedLng.toFixed(6)}`,
         };
         setSelectedLocation(latLng);
         showLocationOnMap(latLng);
@@ -60,18 +63,18 @@ const LocationSearch = ({ onLocationSelect, onClose }) => {
 
   const showLocationOnMap = (latLng) => {
     if (map && latLng) {
-      map.setView([latLng.lat, latLng.lng], 15);
+      map.setView([latLng.latitude, latLng.longitude], 15);
 
       if (marker) {
         map.removeLayer(marker);
       }
 
-      const newMarker = L.marker([latLng.lat, latLng.lng])
+      const newMarker = L.marker([latLng.latitude, latLng.longitude])
         .addTo(map)
         .bindPopup(
           `<div>
             <p class="mb-2">${latLng.address}</p>
-            <p class="text-sm">${latLng.coordinates}</p>
+            <p class="text-sm">${latLng.displayCoordinates}</p>
           </div>`
         )
         .openPopup();
@@ -132,7 +135,7 @@ const LocationSearch = ({ onLocationSelect, onClose }) => {
             <p className="text-sm text-gray-600">Selected location:</p>
             <p className="text-gray-800">{selectedLocation.address}</p>
             <p className="text-gray-800 text-sm">
-              {selectedLocation.coordinates}
+              {selectedLocation.displayCoordinates}
             </p>
             <button
               onClick={handleUseLocation}

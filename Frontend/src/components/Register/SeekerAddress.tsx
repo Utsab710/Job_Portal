@@ -6,11 +6,23 @@ const SeekerAddress = ({ register, setValue, error }) => {
   const [coordinates, setCoordinates] = useState("");
 
   const handleLocationSelect = (location) => {
+    // Set the address value
     setValue("address", location.address, {
       shouldValidate: true,
       shouldDirty: true,
     });
-    setCoordinates(location.coordinates);
+
+    // Set the latitude and longitude values
+    setValue("latitude", location.latitude, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    setValue("longitude", location.longitude, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+
+    setCoordinates(location.displayCoordinates);
   };
 
   return (
@@ -41,6 +53,10 @@ const SeekerAddress = ({ register, setValue, error }) => {
         )}
         {error && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
       </div>
+
+      {/* Hidden input fields for latitude and longitude */}
+      <input type="hidden" {...register("latitude")} />
+      <input type="hidden" {...register("longitude")} />
 
       {showMap && (
         <LocationSearch

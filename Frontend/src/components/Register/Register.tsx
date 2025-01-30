@@ -51,12 +51,16 @@ function Register() {
             // Set seeker fields to null for employer
             phone_no: null,
             address: null,
+            latitude: null,
+            longitude: null,
             skills: null,
             qualification: null,
           }
         : {
             phone_no: data.phone_no || "",
             address: data.address || "",
+            latitude: data.latitude || null,
+            longitude: data.longitude || null,
             skills: data.skills || "",
             qualification: data.qualification || "",
             // Set employer fields to null for seeker
