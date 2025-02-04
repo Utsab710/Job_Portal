@@ -20,6 +20,7 @@ import AppliedJobs from "./components/Seeker/AppliedJobs";
 import ApplyingJobs from "./components/Seeker/ApplyingJobs";
 import Erecommend from "./components/Employer/Erecommend";
 import ViewCandidate from "./components/Employer/ViewCandidate";
+import ContentBased from "./components/Employer/ContentBased";
 
 function App() {
   return (
@@ -46,6 +47,8 @@ function App() {
         <Route path="/appliedjobs" element={<AppliedJobs />} />
 
         <Route path="/apply/:jobId" element={<ApplyingJobs />} />
+
+        <Route path="/contentbased/:jobId" element={<ContentBased />} />
       </Routes>
     </>
   );

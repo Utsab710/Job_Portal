@@ -49,7 +49,18 @@ const Recommended = () => {
     };
 
     fetchData();
-  }, [isToggleEnabled]); // Added isToggleEnabled to dependency array
+  }, [isToggleEnabled]);
+
+  // Filter jobs based on search query
+  const filteredJobs = jobs.filter((job) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      job.job_title.toLowerCase().includes(searchLower) ||
+      job.company_name.toLowerCase().includes(searchLower) ||
+      (job.job_description &&
+        job.job_description.toLowerCase().includes(searchLower))
+    );
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -123,13 +134,14 @@ const Recommended = () => {
 
         {/* Results count */}
         <p className="text-gray-600 mb-4">
-          {jobs.length} {jobs.length === 1 ? "job" : "jobs"} found
+          {filteredJobs.length} {filteredJobs.length === 1 ? "job" : "jobs"}{" "}
+          found
         </p>
 
         {/* Job Listings */}
-        {jobs.length > 0 ? (
+        {filteredJobs.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {jobs.map((job) => (
+            {filteredJobs.map((job) => (
               <div
                 key={job.id}
                 className="bg-white rounded-lg shadow-md overflow-hidden transform transition-all duration-200 hover:shadow-lg border border-gray-200"

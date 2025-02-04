@@ -85,7 +85,7 @@ function ApplyingJobs() {
 
       setSuccess("Application submitted successfully!");
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/");
       }, 2000);
     } catch (error) {
       console.error("Application error:", error);
