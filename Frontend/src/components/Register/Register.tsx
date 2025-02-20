@@ -16,7 +16,10 @@ function Register() {
     setError,
     reset,
     setValue,
+    watch,
   } = useForm<FormData>();
+
+  const password = watch("password");
 
   const handleAddressChange = (value) => {
     setValue("address", value, {
@@ -26,12 +29,11 @@ function Register() {
   };
 
   const onSubmit = async (data) => {
-    if (data.password !== data.confirmPassword) {
-      setError("confirmPassword", {
-        type: "manual",
-        message: "Passwords do not match",
-      });
-      return;
+    // Remove the manual password check since we'll handle it in the form validation
+
+    // Store phone number locally if it's a job seeker
+    if (!isEmployer && data.phone_no) {
+      localStorage.setItem("seeker_phone", data.phone_no);
     }
 
     // Create payload based on the user type
@@ -50,9 +52,9 @@ function Register() {
             pan_no: data.pan_no || "",
             // Set seeker fields to null for employer
             phone_no: null,
-            address: null,
-            latitude: null,
-            longitude: null,
+            address: data.address,
+            latitude: data.latitude,
+            longitude: data.longitude,
             skills: null,
             qualification: null,
           }
@@ -307,14 +309,14 @@ function Register() {
                 <FormField
                   type="password"
                   name="confirmPassword"
+                  placeholder="Confirm your password"
                   register={register}
-                  error={errors.confirmPassword}
-                  validation={{
+                  registerOptions={{
                     required: "Please confirm your password",
                     validate: (value) =>
-                      value === register("password").value ||
-                      "Passwords do not match",
+                      value === password || "Passwords do not match",
                   }}
+                  error={errors.confirmPassword}
                 />
               </div>
             </div>

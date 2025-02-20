@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
@@ -9,13 +9,62 @@ function ApplyingJobs() {
   const job = location.state?.job;
 
   const [formData, setFormData] = useState({
-    location: "",
+    address: "",
     phone_no: "",
     expected_salary: "",
     resume: null,
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          throw new Error("No authentication token found");
+        }
+
+        // Fetch address from database
+        const response = await fetch("http://127.0.0.1:8000/api/profile/", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch profile data");
+        }
+
+        const profileData = await response.json();
+        console.log("Fetched profile data:", profileData);
+
+        // Get phone number from localStorage
+        const phoneNumber = localStorage.getItem("seeker_phone") || "";
+
+        // Update form data with both address from database and phone from localStorage
+        setFormData((prevState) => ({
+          ...prevState,
+          address: profileData.address || "",
+          phone_no: phoneNumber,
+        }));
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        if (error.message === "No authentication token found") {
+          navigate("/login");
+        } else {
+          setError("Failed to load user data");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,7 +74,6 @@ function ApplyingJobs() {
     }));
   };
 
-  // Handle file input
   const handleFileChange = (e) => {
     setFormData((prevState) => ({
       ...prevState,
@@ -39,28 +87,13 @@ function ApplyingJobs() {
     setSuccess("");
 
     try {
-      // Debug log
-      console.log("Submitting job application with data:", {
-        job: job?.id,
-        location: formData.location,
-        phone_no: formData.phone_no,
-        expected_salary: formData.expected_salary,
-        resume: formData.resume,
-      });
-
       const submitData = new FormData();
       submitData.append("job", job.id);
-      submitData.append("location", formData.location);
+      submitData.append("address", formData.address);
       submitData.append("phone_no", formData.phone_no);
       submitData.append("expected_salary", formData.expected_salary);
       if (formData.resume) {
         submitData.append("resume", formData.resume);
-      }
-
-      // Debug log
-      console.log("FormData contents:");
-      for (let pair of submitData.entries()) {
-        console.log(pair[0] + ": " + pair[1]);
       }
 
       const response = await fetch("http://127.0.0.1:8000/api/apply-job/", {
@@ -71,11 +104,7 @@ function ApplyingJobs() {
         body: submitData,
       });
 
-      // Debug log
-      console.log("Response status:", response.status);
-
       const data = await response.json();
-      console.log("Response data:", data);
 
       if (!response.ok) {
         throw new Error(
@@ -109,6 +138,20 @@ function ApplyingJobs() {
     );
   }
 
+  if (loading) {
+    return (
+      <div>
+        <Header />
+        <div className="min-h-screen bg-gray-100 p-8">
+          <div className="bg-white rounded-lg p-6 shadow-md">
+            <p>Loading...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div>
       <Header />
@@ -129,27 +172,37 @@ function ApplyingJobs() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block mb-1">Location</label>
+              <label className="block mb-1">Address</label>
               <input
                 type="text"
-                name="location"
-                value={formData.location}
+                name="address"
+                value={formData.address}
                 onChange={handleChange}
                 className="w-full p-2 border rounded"
                 required
               />
+              {!formData.address && (
+                <p className="text-red-500 text-sm mt-1">
+                  Address not found. Please update your profile.
+                </p>
+              )}
             </div>
 
             <div>
               <label className="block mb-1">Phone Number</label>
               <input
-                type="number"
+                type="text"
                 name="phone_no"
                 value={formData.phone_no}
                 onChange={handleChange}
                 className="w-full p-2 border rounded"
                 required
               />
+              {!formData.phone_no && (
+                <p className="text-red-500 text-sm mt-1">
+                  Phone number not found. Please update your profile.
+                </p>
+              )}
             </div>
 
             <div>
