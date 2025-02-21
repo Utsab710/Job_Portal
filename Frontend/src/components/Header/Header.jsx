@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import Notification from "../Seeker/Notification"; // Import Notification
 
 export default function Header() {
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -230,7 +231,8 @@ export default function Header() {
           </div>
 
           {/* Login/Logout section */}
-          <div className="flex items-center lg:order-2">
+          <div className="flex items-center lg:order-2 space-x-4">
+            {userType === "seeker" && <Notification />}
             {loggedInUser ? (
               <div className="flex items-center space-x-4">
                 <span className="text-gray-800">

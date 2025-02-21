@@ -1,3 +1,4 @@
+// src/components/Home.jsx
 import React, { useEffect, useState } from "react";
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
@@ -34,7 +35,7 @@ function Home() {
 
         const data = await response.json();
         setJobs(data);
-        setFilteredJobs(data); // Initialize filtered jobs with all jobs
+        setFilteredJobs(data);
       } catch (error) {
         console.error("Error fetching jobs:", error);
         setError(error.message);
@@ -54,17 +55,32 @@ function Home() {
 
   const handleSearch = () => {
     setIsSearched(true);
+    const lowerSearchTitle = searchTitle.toLowerCase().trim();
+    const lowerSearchLocation = searchLocation.toLowerCase().trim();
+
     const filtered = jobs.filter((job) => {
-      const titleMatch = job.job_title
-        .toLowerCase()
-        .includes(searchTitle.toLowerCase());
+      const titleMatch =
+        (job.job_title &&
+          job.job_title.toLowerCase().includes(lowerSearchTitle)) ||
+        (job.job_description &&
+          job.job_description.toLowerCase().includes(lowerSearchTitle)) ||
+        (job.requirements &&
+          job.requirements.toLowerCase().includes(lowerSearchTitle));
       const locationMatch =
-        !searchLocation ||
-        job.company_address
-          .toLowerCase()
-          .includes(searchLocation.toLowerCase());
-      return titleMatch && locationMatch;
+        !lowerSearchLocation ||
+        (job.company_address &&
+          job.company_address.toLowerCase().includes(lowerSearchLocation));
+
+      if (lowerSearchTitle && lowerSearchLocation) {
+        return titleMatch && locationMatch;
+      } else if (lowerSearchTitle) {
+        return titleMatch;
+      } else if (lowerSearchLocation) {
+        return locationMatch;
+      }
+      return true;
     });
+
     setFilteredJobs(filtered);
   };
 
@@ -82,7 +98,6 @@ function Home() {
     <div>
       <Header />
       <div className="bg-gray-100 min-h-screen">
-        {/* Hero Section */}
         <section className="bg-gray-900 text-white py-20">
           <div className="container mx-auto text-center px-4">
             <h1 className="text-4xl font-bold mb-4">
@@ -109,7 +124,7 @@ function Home() {
                   onKeyPress={handleKeyPress}
                 />
                 <button
-                  className="bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-300"
+                  className="bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-colors"
                   onClick={handleSearch}
                 >
                   Search
@@ -119,7 +134,6 @@ function Home() {
           </div>
         </section>
 
-        {/* Featured Jobs Section */}
         <div className="py-12">
           <h2 className="text-3xl font-bold mb-8 text-center">
             {isSearched ? "Search Results" : "Featured Jobs"}

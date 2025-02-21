@@ -1,10 +1,10 @@
+// src/App.jsx
 import { Route, Routes } from "react-router-dom";
 import Home from "./components/Home/Home";
 import About from "./components/About/About";
 import ContactUs from "./components/Contact/ContactUs";
 import Seeker from "./components/Register/Seeker";
 import Employer from "./components/Register/Employer";
-
 import EmployerLogin from "./components/Login/EmployerLogin";
 import SeekerLogin from "./components/Login/SeekerLogin";
 import EmployerHome from "./components/Home/EmployerHome";
@@ -45,10 +45,9 @@ function App() {
         <Route path="/viewcandidate" element={<ViewCandidate />} />
         <Route path="/jobdetails/:id" element={<JobDetails />} />
         <Route path="/appliedjobs" element={<AppliedJobs />} />
-
         <Route path="/apply/:jobId" element={<ApplyingJobs />} />
-
         <Route path="/contentbased/:jobId" element={<ContentBased />} />
+        {/* Removed: <Route path="/notification" element={<Notification />} /> */}
       </Routes>
     </>
   );

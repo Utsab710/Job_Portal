@@ -5,6 +5,7 @@ import Footer from "../Footer/Footer";
 function Profile() {
   const [activeSection, setActiveSection] = useState("personal");
   const [seekerData, setSeekerData] = useState(null);
+  const [appliedJobs, setAppliedJobs] = useState([]); // New state for applied jobs
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -26,37 +27,61 @@ function Profile() {
           throw new Error("No access token found");
         }
 
-        const response = await fetch("http://localhost:8000/api/profile/", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        });
+        // Fetch profile data
+        const profileResponse = await fetch(
+          "http://localhost:8000/api/profile/",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
-        if (!response.ok) {
-          const errorText = await response.text();
+        if (!profileResponse.ok) {
+          const errorText = await profileResponse.text();
           throw new Error(`Failed to fetch profile data: ${errorText}`);
         }
 
-        const data = await response.json();
-        setSeekerData(data);
+        const profileData = await profileResponse.json();
+        setSeekerData(profileData);
         setFormData({
-          first_name: data.first_name || "",
-          last_name: data.last_name || "",
-          qualification: data.qualification || "",
-          username: data.username || "",
-          email: data.email || "",
-          address: data.address || "",
-          skills: data.skills || "",
+          first_name: profileData.first_name || "",
+          last_name: profileData.last_name || "",
+          qualification: profileData.qualification || "",
+          username: profileData.username || "",
+          email: profileData.email || "",
+          address: profileData.address || "",
+          skills: profileData.skills || "",
         });
 
-        const filledFields = Object.values(data).filter(
+        const filledFields = Object.values(profileData).filter(
           (value) => value !== null && value !== ""
         ).length;
-        const totalFields = Object.keys(data).length;
+        const totalFields = Object.keys(profileData).length;
         const percentage = (filledFields / totalFields) * 100;
         setCompletionPercentage(percentage.toFixed(2));
+
+        // Fetch applied jobs
+        const applicationsResponse = await fetch(
+          "http://localhost:8000/api/my-applications/",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!applicationsResponse.ok) {
+          const errorText = await applicationsResponse.text();
+          throw new Error(`Failed to fetch applications: ${errorText}`);
+        }
+
+        const applicationsData = await applicationsResponse.json();
+        setAppliedJobs(applicationsData);
       } catch (err) {
         console.error("Detailed error fetching profile:", err);
         setError(err.message);
@@ -75,6 +100,7 @@ function Profile() {
   };
 
   const handleUpdateProfile = async () => {
+    // Existing handleUpdateProfile function remains unchanged...
     try {
       const accessToken = localStorage.getItem("access_token");
       if (!accessToken) {
@@ -106,6 +132,7 @@ function Profile() {
   };
 
   const renderPersonalDetails = () => {
+    // Existing renderPersonalDetails function remains unchanged...
     if (error) {
       return (
         <div className="bg-white p-6 rounded-lg shadow text-red-500">
@@ -313,6 +340,33 @@ function Profile() {
     );
   };
 
+  const renderApplicationsSection = () => {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-6">Applied Jobs</h2>
+        {appliedJobs.length > 0 ? (
+          <div className="space-y-4">
+            {appliedJobs.map((job) => (
+              <div key={job.id} className="border p-4 rounded-md">
+                <p>
+                  <strong>Job ID:</strong> {job.job_id}
+                </p>
+                <p>
+                  <strong>Status:</strong> {job.status}
+                </p>
+                <p>
+                  <strong>Expected Salary:</strong> ${job.expected_salary}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>No applications yet.</p>
+        )}
+      </div>
+    );
+  };
+
   const renderSection = () => {
     switch (activeSection) {
       case "personal":
@@ -321,6 +375,8 @@ function Profile() {
         return renderResumeSection();
       case "jobPreference":
         return renderJobPreferenceSection();
+      case "applications":
+        return renderApplicationsSection();
       default:
         return null;
     }
@@ -364,6 +420,16 @@ function Profile() {
                 >
                   Job Preference
                 </button>
+                <button
+                  onClick={() => setActiveSection("applications")}
+                  className={`w-full text-left px-3 py-2 rounded-md ${
+                    activeSection === "applications"
+                      ? "bg-red-50 text-red-700"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Applied Jobs
+                </button>
               </nav>
             </div>
 
@@ -401,6 +467,7 @@ function Profile() {
 }
 
 function ResumeSection() {
+  // Existing ResumeSection function remains unchanged...
   const [resume, setResume] = useState(null);
   const [error, setError] = useState(null);
 

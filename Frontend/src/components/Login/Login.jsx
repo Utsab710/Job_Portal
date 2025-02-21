@@ -1,3 +1,4 @@
+// src/components/Login/Login.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../Header/Header";
@@ -14,8 +15,8 @@ function Login() {
     setError("");
 
     try {
-      // Step 1: Get token
-      const tokenResponse = await fetch("http://localhost:8000/api/token/", {
+      // Use /api/login/ instead of /api/token/
+      const tokenResponse = await fetch("http://localhost:8000/api/login/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -26,26 +27,21 @@ function Login() {
         }),
       });
 
-      const tokenResponseText = await tokenResponse.text();
-      console.log("Token Response:", tokenResponseText);
+      const tokenData = await tokenResponse.json();
 
       if (!tokenResponse.ok) {
-        const errorData = JSON.parse(tokenResponseText);
         throw new Error(
-          errorData.email?.[0] ||
-            errorData.detail ||
-            "Invalid credentials. Please try again."
+          tokenData.detail || "Invalid credentials. Please try again."
         );
       }
 
-      const tokenData = JSON.parse(tokenResponseText);
       const accessToken = tokenData.access;
 
       // Save tokens
       localStorage.setItem("access_token", accessToken);
       localStorage.setItem("refresh_token", tokenData.refresh);
 
-      // Step 2: Get user details using the access token
+      // Get user details
       const userResponse = await fetch(
         "http://localhost:8000/api/user-details/",
         {
@@ -57,26 +53,19 @@ function Login() {
         }
       );
 
-      const userResponseText = await userResponse.text();
-      console.log("User Response:", userResponseText);
-
       if (!userResponse.ok) {
         throw new Error("Failed to get user information");
       }
 
-      const user = JSON.parse(userResponseText);
+      const user = await userResponse.json();
       console.log("User data:", user);
 
       // Save user info
       localStorage.setItem("username", user.username || user.email);
-      localStorage.setItem("role", user.role); // Store the role
+      localStorage.setItem("role", user.role);
 
-      // Redirect based on user role
-      if (user.role === "job_employer") {
-        navigate("/employerhome");
-      } else {
-        navigate("/seekerhome");
-      }
+      // Redirect based on role
+      navigate(user.role === "job_employer" ? "/employerhome" : "/seekerhome");
     } catch (err) {
       console.error("Login error:", err.message);
       setError(err.message);
